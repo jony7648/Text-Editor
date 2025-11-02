@@ -1,0 +1,4 @@
+Steps
+Be able to read files and write to files
+Be able to display the contents of said file
+Have keyboard shortcuts maybe?
