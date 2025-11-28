@@ -3,10 +3,20 @@
 
 #include "file.h"
 
-#define ESCAPE_KEYCODE 27
 #define EDITOR_NORMAL_MODE 0
 #define EDITOR_INSERT_MODE 1
 #define EDITOR_VISUAL_MODE 2
+#define EDITOR_COMMAND_MODE 3
+
+#ifdef _WIN32
+	#define BACKSPACE_KEYCODE 8
+#elif __APPLE__
+	#define BACKSPACE_KEYCODE 127
+#elif __linux__
+	#define BACKSPACE_KEYCODE 8
+#endif
+
+#define ESCAPE_KEYCODE 27
 
 typedef struct EditorState EditorState;
 struct EditorState {
@@ -15,10 +25,16 @@ struct EditorState {
 	char *filePath;
 	char cursorChar;
 	int textLineCount;
+	int maxCharCount; //the amount of chars the program can draw before wrapping
+	int maxDrawLineCount;
+	int mainWindowSizeY;
+	int statusBarSizeY;
 	int currentLine;
 	int currentChar;
 
 	int editMode;
+
+	char *editLineBuffer;
 
 	FileBuffer *fileBuffer;
 };

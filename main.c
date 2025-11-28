@@ -1,13 +1,14 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <ncurses.h>
 #include "draw.h"
 #include "file.h"
 #include "state.h"
+#include "command_line.h"
 
 static void closeProgram(EditorState *editorState, FileBuffer *fileBuffer) {
 	endwin();
 	editorStateFree(editorState);
-
 }
 
 static void applyNormalModeControls(EditorState *editorState, char userKey) {
@@ -37,7 +38,10 @@ static void applyNormalModeControls(EditorState *editorState, char userKey) {
 		case 'q':
 			editorState->running = false;
 			break;
-
+		case 'w':
+			editorState->running = false;
+			fileBufferSaveToFile(editorState->fileBuffer, "__OUTFILE__");
+			break;
 	}
 }
 
@@ -51,6 +55,7 @@ static void applyInsertModeControls(EditorState *editorState, char userKey) {
 }
 
 static void handleEditorStates(EditorState *editorState) {
+
 	switch(editorState->editMode) {
 		case EDITOR_NORMAL_MODE:
 			applyNormalModeControls(editorState, getch());
@@ -59,44 +64,60 @@ static void handleEditorStates(EditorState *editorState) {
 			applyInsertModeControls(editorState, getch());
 			break;
 	}
-
-	if (editorState->editMode == EDITOR_INSERT_MODE) {
-	}
-
 }
 
-int main() {
-	//create a struct that will manage text editor states 
-	//and create an advance line function to disallow invalid lineArr
-	//indexs
+void argFunction(char *lastParam, char *currentParam, char *nextParam, void *signalData) {
+	EditorState *editorState = (EditorState*)signalData;
 
-	FileBuffer *fileBuffer = newFileBuffer("example.c");
+	FileBuffer *fileBuffer = newFileBuffer(currentParam);
+
+	editorAssignFileBuffer(editorState, fileBuffer);
+}
+
+int main(int argc, char **argv) {
+	char *filePath = NULL;
+	EditorState *editorState = NULL;
+
+
 	initscr();
 
+	editorState = newEditorState();
 
-	EditorState *editorState = newEditorState();
-	editorAssignFileBuffer(editorState, fileBuffer);
+	commLineParseData commLineData;
+
+	commLineData.argFunc = &argFunction;
+	commLineData.paramFunc = NULL;
+	commLineData.paramArgFunc = NULL;
+	commLineData.signalData = editorState;
+
+	parseCommandLineArgs(argc, argv, &commLineData);
+
+	if (editorState->fileBuffer == NULL) {
+		printf("ERROR: failed to read file\n");
+		return 1;
+	}
+
 
 	while (editorState->running) {
 		cbreak();
 		noecho();
 
-		drawTextFromBuffer(editorState);
+		//printw("\n\n\n");
+		//printw("EditMode: %d\n", editorState->editMode);
+		//printw("Current Line: %d\nMax Line: %d\n", editorState->currentLine, editorState->textLineCount - 1);
+		//printw("Current Char: %d\n", editorState->currentChar);
+		//printw("MaxCharCount: %d\n", editorState->maxCharCount);
 
-		printw("\n\n\n");
-		printw("EditMode: %d\n", editorState->editMode);
-		printw("Current Line: %d\nMax Line: %d\n", editorState->currentLine, editorState->textLineCount - 1);
-		printw("Current Char: %d\n", editorState->currentChar);
+		drawTextFromBuffer(editorState);
+		drawStatusRow(editorState);
 
 		handleEditorStates(editorState);
-
 
 		clear();
 
 	}
 
-
-	closeProgram(editorState, fileBuffer);
+	closeProgram(editorState, editorState->fileBuffer);
 
 	return 0;
 }

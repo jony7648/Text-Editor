@@ -1,2 +1,4 @@
+normal_args=main.c draw.c file.c state.c command_line.c -o program -lncurses
+
 default:
-	gcc main.c draw.c file.c state.c -o program -lncurses
+	gcc $(normal_args)

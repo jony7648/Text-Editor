@@ -5,5 +5,6 @@
 #include "state.h"
 
 extern void drawTextFromBuffer(EditorState *editorState);
+extern void drawStatusRow(EditorState *editorState);
 
 #endif

@@ -10,19 +10,21 @@ FileBuffer *newFileBuffer(char *filePath) {
 	char *lineBuffer;
 	int maxChars = 200;
 
-	fileBuffer = malloc(sizeof(FileBuffer));
-
-	fileBuffer->maxLineCount = 500;
-	fileBuffer->lineArr = NULL;
-
-
 	fptr = fopen(filePath, "r");
 
 	if (fptr == NULL) {
 		return NULL;
 	}
 
+	fileBuffer = malloc(sizeof(FileBuffer));
 
+	fileBuffer->maxLineCount = 500;
+	fileBuffer->lineArr = NULL;
+	fileBuffer->maxChars = 200;
+
+	//assign file path
+	fileBuffer->filePath = malloc((strlen(filePath) + 1) * sizeof(char));
+	strcpy(fileBuffer->filePath, filePath);
 
 	//allocate memory to hold number of file lines
 	fileBuffer->lineArr = malloc(sizeof(char*) * fileBuffer->maxLineCount);
@@ -39,6 +41,11 @@ FileBuffer *newFileBuffer(char *filePath) {
 	//fill up that memory with the characters from the file
 	while (fgets(lineBuffer, maxChars, fptr)) {
 		//fileBuffer->lineArr[fileBuffer->lineCount] = malloc(sizeof(char) * strlen(lineBuffer));
+
+		if (fileBuffer->lineCount >= fileBuffer->maxLineCount) {
+			break;
+		}
+
 		strcpy(fileBuffer->lineArr[fileBuffer->lineCount], lineBuffer);
 		fileBuffer->lineCount++;
 	}
@@ -47,3 +54,18 @@ FileBuffer *newFileBuffer(char *filePath) {
 	return fileBuffer;
 }
 
+int fileBufferSaveToFile(FileBuffer *fileBuffer, char *filePath) {
+	if (filePath == NULL) {
+		return 1;
+	}
+
+	FILE *fptr = fopen(filePath, "w");
+
+	for (int i=0; i<fileBuffer->lineCount; i++) {
+		fprintf(fptr, "%s", fileBuffer->lineArr[i]);
+	}
+
+
+	fclose(fptr);
+	return 0;	
+}
