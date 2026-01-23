@@ -1,2 +1,2 @@
 # Text-Editor
-My attempt at a Text Editor
+A text editor in C
